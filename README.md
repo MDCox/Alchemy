@@ -1,5 +1,7 @@
 Alchemy
 =======
+#IN DEVELOPMENT 
+[![Build Status](https://travis-ci.org/GraphAlchemist/Alchemy.svg?branch=master)](https://travis-ci.org/GraphAlchemist/Alchemy)
 ##Philosophy 
 Alchemy.js is a graph drawing application, built with d3.
 
@@ -37,13 +39,18 @@ Alchemy.js was built so that developers could easily get up and running with Gra
 4. Be amazed by your sexy graph visualization.
 
 ##Documentation
-Read more about how to configure your app in the [wiki](#).
+Read more about how to use alchemy in the [docs](#).
+
+To build the docs locally install mkdocs and then serve them up.
+```python
+pip install mkdocs
+mkdocs serve
+```
 
 ##Contributing 
-Read about how to contribute in the [wiki](#).
+Read about how to contribute in the [docs](#).
 
 ##Licensing
-...Bullet Points
-...Use Cases
+The source is licensed under the AGPLv3 license for open source and open data projects.  For commercial licensing, get in touch with the [GraphAlchemist](#) team. 
 
     

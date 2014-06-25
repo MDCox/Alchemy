@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-defaults =
+alchemy.defaults =
     # Helpers
     afterLoad: 'drawingComplete'
     dataSource: null
@@ -65,7 +65,6 @@ defaults =
     nodeFilters: false
 
     # Controls
-    # controlOrientation: 'vertical' no longer implemented or used
     zoomControls: false
 
     # Nodes
@@ -87,5 +86,3 @@ defaults =
     initialTranslate: [0,0]
     scaleExtent: [0.01, 5] # not yet implemented
     warningMessage: "There be no data!  What's going on?" #not yet implemented
-
-conf = _.assign({}, defaults)

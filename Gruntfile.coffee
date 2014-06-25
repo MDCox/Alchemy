@@ -8,8 +8,7 @@
 module.exports = (grunt) ->
   require("load-grunt-tasks") grunt
   require("time-grunt") grunt
-  AlchemyTasks = require('./AlchemyTasks')
-  console.log(AlchemyTasks.CoffeeTask)
+
   grunt.initConfig
     
     # Project settings
@@ -103,7 +102,24 @@ module.exports = (grunt) ->
 
     
     # Compiles CoffeeScript to JavaScript
-    coffee: AlchemyTasks.CoffeeTask
+    coffee:
+      dist:
+        options:
+            bare: false
+            sourceMap: true
+        files:
+            # all of the core, alchemy.js files
+            ".tmp/scripts/alchemy.js": [".tmp/scripts/alchemy/start.coffee"
+                                        ".tmp/scripts/alchemy/{,*/}*.{coffee,litcoffee,coffee.md}"
+                                        ".tmp/scripts/alchemy/end.coffee"]
+      dev:
+        options:
+            bare: false
+            sourceMap: true
+        files:
+            # all of the files used in testing and development - configuration, etc.
+            ".tmp/scripts/else.js": [".tmp/scripts/*.coffee", "!.tmp/scripts/alchemy.src.coffee"]
+
       test:
         files: [
           expand: true
@@ -327,10 +343,12 @@ module.exports = (grunt) ->
 
     concurrent:
       # Run some tasks in parallel to speed up build process
-      server: ["compass:server", "coffee:dist", "copy:styles"]
-      test: ["coffee", "copy:styles"]
+      server: ["compass:server", "coffee",  "copy:styles"]
+      test: ["coffee:test", "coffee:dist", "copy:styles"]
       dist: ["coffee", "compass", "copy:styles", "imagemin", "svgmin"]
-      buildAlchemy: ["coffee", "compass", "copy:styles"]
+      buildAlchemy: ["coffee:dist", "coffee:test", "compass", "copy:styles"]
+
+  grunt.loadNpmTasks('grunt-mocha');
 
   grunt.registerTask "serve", (target) ->
     return grunt.task.run(["build", "connect:dist:keepalive"])  if target is "dist"
@@ -342,7 +360,10 @@ module.exports = (grunt) ->
 
   grunt.registerTask "test", (target) ->
     grunt.task.run ["clean:server", "copy:coffee", "concurrent:test", "autoprefixer"]  if target isnt "watch"
-    grunt.task.run ["connect:test", "mocha"]
+    if target is "keepalive"
+      grunt.task.run ["connect:test:keepalive", "mocha"]
+    else
+      grunt.task.run ["connect:test", "mocha"]
 
   grunt.registerTask "build", ["clean:dist", "useminPrepare", 
                                "copy:coffee", "concurrent:dist", 
@@ -352,11 +373,11 @@ module.exports = (grunt) ->
                                "rev", "usemin", 
                                "htmlmin"]
 
-  grunt.registerTask "default", ["newer:jshint", "test", "build"]
-
   #same as `build` but builds Alchemy for distribution
   grunt.registerTask 'buildAlchemy', ["clean:dist", "useminPrepare", 
                                       "copy:coffee", "concurrent:buildAlchemy", 
                                       "autoprefixer", "concat:buildAlchemy", 
                                       "concat:generated", "cssmin:buildAlchemy", 
                                       "uglify:buildAlchemy"]
+
+  grunt.registerTask "default", ["newer:jshint", "test", "buildAlchemy"]

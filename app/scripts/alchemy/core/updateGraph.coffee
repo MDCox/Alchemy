@@ -15,24 +15,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 alchemy.updateGraph = (start=true) ->
-    hello = 0
     #enter/exit nodes/edges
     alchemy.edge = alchemy.vis.selectAll("line")
                .data(alchemy.edges)
     alchemy.node = alchemy.vis.selectAll("g.node")
               .data(alchemy.nodes, (d) -> d.id)
-    console.log(hello)
-    # TODO - currently we are displaying all nodes/edges, not a subset
-    # set currentNodes/currentEdges and call force.nodes(currentNodes).edges(currentEdges).start();
-    # tick should also examine just the visible nodes
+              
     if start then @force.start()
     if not initialComputationDone
         while @force.alpha() > 0.005
             alchemy.force.tick()
-            # alchemy.layout.tick()
         initialComputationDone = true
         console.log(Date() + ' completed initial computation')
-        if(conf.locked) then alchemy.force.stop()
+        if(alchemy.conf.locked) then alchemy.force.stop()
 
     for node in alchemy.nodes
         alchemy.layout.collide(node)
@@ -53,9 +48,3 @@ alchemy.updateGraph = (start=true) ->
     alchemy.node
            .exit()
            .remove()
-
-    # initialize graph to size of window
-    # alchemy.utils.resize()
-    # resize svg on resizing of the window - if the div changes
-    
-    # window.onresize = alchemy.utils.resize

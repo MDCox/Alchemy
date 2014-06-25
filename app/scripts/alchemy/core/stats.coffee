@@ -16,10 +16,9 @@
 
 alchemy.stats = 
     init: () -> 
-        if conf.showStats is true
+        if alchemy.conf.showStats is true
             alchemy.stats.show()
             alchemy.stats.update()
-            alchemy.stats.insertSVG()
     show: () -> 
         stats_html = """
                         <div id = "stats-header" data-toggle="collapse" data-target="#stats #all-stats">
@@ -51,10 +50,10 @@ alchemy.stats =
         nodeStats += "<li class = 'list-group-item gen_node_stat'>Number of inactive nodes: <span class='badge'>#{inactiveNodes}</span></li>"
 
         #add stats for all node types
-        if conf.nodeTypes
-            nodeKey = Object.keys(conf.nodeTypes)
+        if alchemy.conf.nodeTypes
+            nodeKey = Object.keys(alchemy.conf.nodeTypes)
             nodeTypes = ''
-            for nodeType in conf.nodeTypes[nodeKey]
+            for nodeType in alchemy.conf.nodeTypes[nodeKey]
                 # if not currentNodeTypes[t] then continue
                 caption = nodeType.replace('_', ' ')
                 nodeNum = d3.selectAll("g.node.#{nodeType}")[0].length
@@ -71,51 +70,94 @@ alchemy.stats =
 
     edgeStats: () ->
         #general edge stats
-        edgeStats = ''
+        edgeData = []
         edgeNum = d3.selectAll(".edge")[0].length
         activeEdges = d3.selectAll(".edge.active")[0].length
         inactiveEdges = d3.selectAll(".edge.inactive")[0].length
-        edgeStats += "<li class = 'list-group-item gen_edge_stat'>Number of relationships: <span class='badge'>#{edgeNum}</span></li>"            
-        edgeStats += "<li class = 'list-group-item gen_edge_stat'>Number of active relationships: <span class='badge'>#{activeEdges}</span></li>"
-        edgeStats += "<li class = 'list-group-item gen_edge_stat'>Number of inactive relationships: <span class='badge'>#{inactiveEdges}</span></li>"
+
+        edgeGraph = "<li class = 'list-group-item gen_edge_stat'>Number of relationships: <span class='badge'>#{edgeNum}</span></li>
+                    <li class = 'list-group-item gen_edge_stat'>Number of active relationships: <span class='badge'>#{activeEdges}</span></li>
+                    <li class = 'list-group-item gen_edge_stat'>Number of inactive relationships: <span class='badge'>#{inactiveEdges}</span></li>
+                    <li id='edge-stats-graph' class='list-group-item'></li>"
 
         #add stats for edge types
-        if conf.edgeTypes
+        if alchemy.conf.edgeTypes
             for e in d3.selectAll(".edge")[0]
                 currentRelationshipTypes[[e].caption] = true
 
-            edgeTypes = ''
-            for edgeType in conf.edgeTypes
+            for edgeType in alchemy.conf.edgeTypes
                 if not edgeType then continue
                 caption = edgeType.replace('_', ' ')
                 edgeNum = d3.selectAll(".edge.#{edgeType}")[0].length
-                edgeTypes += "<li class = 'edgeType list-group-item' id='li-#{edgeType}' name = #{caption}>Number of relationships of type #{caption}: <span class='badge'>#{edgeNum}</span></li>"
-            $('#rel-stats').html(edgeTypes)
-            edgeStats += edgeTypes
+                edgeData.push(["#{caption}", edgeNum])
 
-        $('#rel-stats').html(edgeStats)
+        $('#rel-stats').html(edgeGraph) 
+        alchemy.stats.insertSVG("edge", edgeData)
+        return edgeData
 
-    insertSVG: () ->
-        width = conf.graphWidth * .25
+    nodeStats: () ->
+        #general node stats
+        nodeData = []
+        totalNodes = d3.selectAll(".node")[0].length
+        activeNodes = d3.selectAll(".node.active")[0].length
+        inactiveNodes = d3.selectAll(".node.inactive")[0].length
+
+        #add stats for all node types
+        if alchemy.conf.nodeTypes
+            nodeKey = Object.keys(alchemy.conf.nodeTypes)
+            for nodeType in alchemy.conf.nodeTypes[nodeKey]
+                nodeNum = d3.selectAll("g.node.#{nodeType}")[0].length
+                nodeData.push(["#{nodeType}", nodeNum])
+
+        #add the graph
+        nodeGraph = "<li class = 'list-group-item gen_node_stat'>Number of nodes: <span class='badge'>#{totalNodes}</span></li>
+                    <li class = 'list-group-item gen_node_stat'>Number of active nodes: <span class='badge'>#{activeNodes}</span></li>
+                    <li class = 'list-group-item gen_node_stat'>Number of inactive nodes: <span class='badge'>#{inactiveNodes}</span></li>
+                    <li id='node-stats-graph' class='list-group-item'></li>" 
+
+        $('#node-stats').html(nodeGraph)
+        alchemy.stats.insertSVG("node", nodeData)
+        return nodeData
+
+    insertSVG: (element, data) ->
+        width = alchemy.conf.graphWidth * .25
         height = 250
-        radius = width / 2
+        radius = width / 4
+        color = d3.scale.category20()
+
         arc = d3.svg.arc()
             .outerRadius(radius - 10)
-            .innerRadius(0)
+            .innerRadius(radius/2)
 
         pie = d3.layout.pie()
             .sort(null)
-            .value(() -> 10)
+            .value((d) -> d[1])
 
-        svg = d3.select("#node-stats-graph")
+        svg = d3.select("##{element}-stats-graph")
             .append("svg")
-            .attr("style", "width:#{width}px; height:#{height}px")
             .append("g")
-            # .attr("transform", "translate(" + width / 2 + "," + 100 + "%)")
+            .style({"width": width, "height":height})
+            .attr("transform", "translate(" + width/2 + "," + height/2 + ")")
+
+        arcs = svg.selectAll(".arc")
+            .data(pie(data))
+            .enter().append("g")
+            .attr("class", "arc")
+
+        arcs.append("path")
+            .attr("d", arc)
+            .attr("stroke", (d, i) -> color(i)) 
+            .attr("stroke-width", 2)
+            .attr("fill", "none")
+
+        arcs.append("text")
+            .attr("transform", (d) -> "translate(" + arc.centroid(d) + ")")
+            .attr("dy", ".35em")
+            .text((d, i) -> data[i][0])
 
 
     update: () -> 
-        if conf.nodeStats is true
+        if alchemy.conf.nodeStats is true
             alchemy.stats.nodeStats()
-        if conf.edgeStats is true
+        if alchemy.conf.edgeStats is true
             alchemy.stats.edgeStats()
